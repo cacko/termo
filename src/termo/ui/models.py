@@ -44,6 +44,9 @@ class Command(StrEnum):
     SHARE = "share"
 
 
+class StatusChange(BaseModel):
+    status: Status
+
 class NowData(BaseModel):
     temp: float
     humid: float

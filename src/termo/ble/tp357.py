@@ -1,14 +1,15 @@
 import asyncio
+from asyncio import BaseEventLoop
 import logging
 from queue import Queue
-from termo.core.thread import StoppableThread
 from typing import Any, Optional
+from corethread import StoppableThread
 from bleak import BleakClient
 from bleak.backends.device import BLEDevice
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak import BleakScanner
 
-from termo.ui.models import NowData
+from termo.ui.models import NowData, Status, StatusChange
 
 
 MAC = "c4:5a:11:b4:53:19"
@@ -21,7 +22,8 @@ class TP357Meta(type):
 
     __instance: Optional["TP357"] = None
     __ui_queue: Optional[Queue] = None
-    __init_notify: Optional[asyncio.Future] = None
+    __notifier: Optional[asyncio.Future] = None
+    __thread: Optional[StoppableThread] = None
 
     def __call__(cls, *args: Any, **kwds: Any) -> Any:
         if not cls.__instance:
@@ -36,24 +38,36 @@ class TP357Meta(type):
         return cls.__ui_queue
 
     def start_notify(cls):
-        if not cls.__init_notify:
-            loop = asyncio.get_event_loop()
+        if not cls.__notifier:
+            loop: BaseEventLoop = asyncio.get_event_loop()
 
-            def bleak_thread(loop):
+            def bleak_thread(loop: BaseEventLoop):
                 asyncio.set_event_loop(loop)
                 loop.run_forever()
 
             t = StoppableThread(target=bleak_thread, args=(loop,))
             t.start()
-            cls.__init_notify = asyncio.run_coroutine_threadsafe(
+            cls.__notifier = asyncio.run_coroutine_threadsafe(
                 cls().init_notify(), loop
             )
             return t
 
+    def restart_notify(cls):
+        loop = asyncio.get_event_loop()
+        cls.__notifier = asyncio.run_coroutine_threadsafe(cls().init_notify(), loop)
+
+    def stop_loop(cls):
+        asyncio.get_event_loop().stop()
+        asyncio.get_event_loop().close()
+
+
     def stop_notify(cls):
-        if cls.__init_notify:
-            res = cls.__init_notify.cancel()
-            logging.info(f"STOP NOTIFY: {res}")
+        try:
+            assert cls.__notifier
+            assert cls.__notifier.cancel()
+            logging.info(f"STOP NOTIFY")
+        except AssertionError:
+            pass
 
 
 def to_result(data: bytearray):
@@ -68,20 +82,34 @@ def notification_handler(sender: BleakGATTCharacteristic, data: bytearray):
     TP357.queue.put_nowait(res)
 
 
+def disconnect_handler(client: BleakClient):
+    logging.info(f"{client.address} disconnected")
+    TP357.queue.put_nowait(StatusChange(status=Status.DISCONNECTED))
+
+
 class TP357(object, metaclass=TP357Meta):
 
-    async def init_notify(self):
+    @property
+    async def device(self) -> BLEDevice:
         device: BLEDevice = None
         while not device:
             devices = await BleakScanner.discover()
             device = next(filter(lambda x: x.address == ADDRESS, devices), None)
         logging.info(f"found device {device.details}")
-        async with BleakClient(device) as client:
+        return device
+
+    async def init_notify(self):
+        device = await self.device
+        TP357.queue.put_nowait(StatusChange(status=Status.LOADING))
+        async with BleakClient(
+            device, disconnected_callback=disconnect_handler
+        ) as client:
             logging.info(f"connected to {client.address}")
             read = client.services.get_characteristic(UUID_READ)
             await client.start_notify(read, callback=notification_handler)
             try:
-                while True:
-                    await asyncio.sleep(1)
-            except Exception:
+                while client.is_connected:
+                    await asyncio.sleep(0.5)
+            except Exception as e:
+                logging.exception(e)
                 await client.stop_notify(read)

@@ -1,3 +1,4 @@
+import logging
 from queue import Empty, Queue
 from threading import Thread
 from typing import Optional, Any
@@ -5,8 +6,8 @@ from rumps import rumps
 from termo.ble.tp357 import TP357
 from termo.ui.icons import AnimatedIcon, Label, Symbol
 from termo.ui.items.actions import ActionItem
-from termo.ui.models import NowData, Status
-
+from termo.ui.models import NowData, Status, StatusChange
+from termo.core import pid_file
 
 LoadingIcon = AnimatedIcon(
     [Symbol.HOURGLASS, Symbol.HOURGLASS_BOTTOM, Symbol.HOURGLASS_TOP]
@@ -36,7 +37,7 @@ class TermoApp(rumps.App, metaclass=TermoAppMeta):
             menu=[
                 ActionItem.quit,
             ],
-            icon=Symbol.THERMOMETER_MEDIUM_SLASH.value,
+            icon=Symbol.DISCONNECTED.value,
             quit_button=None,
             template=True,
             nosleep=False,
@@ -70,6 +71,7 @@ class TermoApp(rumps.App, metaclass=TermoAppMeta):
             if self.__status == Status.LOADING:
                 self.icon = next(LoadingIcon).value
             resp = self.__ui_queue.get_nowait()
+            logging.debug(resp)
             if resp:
                 method = f"_on{resp.__class__.__name__}"
                 if hasattr(self, method):
@@ -77,17 +79,32 @@ class TermoApp(rumps.App, metaclass=TermoAppMeta):
                 self.__ui_queue.task_done()
         except Empty:
             pass
+        
+    def _onStatusChange(self, resp: StatusChange):
+        self.__status = resp.status
+        match self.__status:
+            case Status.DISCONNECTED:
+                self.icon = Symbol.DISCONNECTED.value
+                self.title = "N/A"
+                self.__now_data = None
+                TP357.stop_notify()
+                TP357.restart_notify()
+            case _:
+                pass
+
+                
 
     def _onNowData(self, resp: NowData):
-        if self.__status == Status.LOADING:
-            self.__status = Status.LOADED
         try:
+            self.__status = Status.LOADED
             assert self.__now_data
-            assert self.__now_data != resp
-        except AssertionError:
+            assert self.__now_data == resp
+        except AssertionError as e:
             self.__now_data = resp
             self.title = self.__now_data.title
             self.icon = self.__now_data.temp_icon.value
+            
+    
 
     @rumps.events.before_quit
     def terminate(self):
@@ -99,6 +116,6 @@ class TermoApp(rumps.App, metaclass=TermoAppMeta):
                 pass
         try:
             rumps.quit_application()
-            # pid_file.unlink(missing_ok=True)
+            pid_file.unlink(missing_ok=True)
         except Exception:
             pass

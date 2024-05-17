@@ -10,6 +10,13 @@
 # nuitka-project: --macos-app-protected-resource="NSBluetoothAlwaysUsageDescription:b luetooth access"
 
 from termo import start
+from termo.core import check_pid, pid_file, show_alert
+import os
 
 if __name__ == "__main__":
-    start()
+    if check_pid():
+        show_alert("teRMo already running.")
+        exit(1)
+    else:
+        pid_file.write_text(f"{os.getpid()}")
+        start()

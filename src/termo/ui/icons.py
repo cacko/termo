@@ -11,7 +11,7 @@ class Symbol(Enum):
     THERMOMETER_HIGH = "thermometer.high"
     THERMOMETER_MEDIUM = "thermometer.medium"
     THERMOMETER_LOW = "thermometer.low"
-    THERMOMETER_MEDIUM_SLASH = "thermometer.medium.slash"
+    DISCONNECTED = "thermometer.medium.slash"
     HOURGLASS = "hourglass"
     HOURGLASS_BOTTOM = "hourglass.bottomhalf.filled"
     HOURGLASS_TOP = "hourglass.tophalf.filled"

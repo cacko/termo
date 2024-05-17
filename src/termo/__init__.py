@@ -11,7 +11,7 @@ from termo.ui.app import TermoApp
 import signal
 
 
-corelog.register(os.environ.get("TERMO_LOG_LEVEL", "INFO"))
+corelog.register(os.environ.get("TERMO_LOG_LEVEL", "INFO"), handler_type=corelog.Handlers.RICH)
 
 def start():
     try:
