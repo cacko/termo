@@ -42,8 +42,9 @@ tasks:
 
   start:
     desc: start the service
+    dir: src/
     cmds:
-      - ssh $REMOTE_HOST 'source ~/.zshrc;systemctl --user start {{.PROJECT}}'
+      - mamba run --live-stream -n {{.PROJECT}} python -m {{.PROJECT}}.app {{.CLI_ARGS}}
 
   stop:
     desc: stop the server

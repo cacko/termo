@@ -1,6 +1,4 @@
-from calendar import c
 import logging
-from re import A
 
 import rich
 from termo.cli.cli import cli

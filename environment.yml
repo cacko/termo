@@ -19,22 +19,42 @@ dependencies:
   - wheel=0.43.0
   - xz=5.2.6
   - pip:
+      - altgraph==0.17.4
+      - annotated-types==0.6.0
       - better-exceptions==0.3.3
       - bleak==0.22.1
       - click==8.1.7
       - colorama==0.4.6
       - corelog==0.0.19
+      - imageio==2.34.1
+      - macholib==1.16.3
       - markdown-it-py==3.0.0
       - mdurl==0.1.2
+      - modulegraph==0.19.6
+      - modulegraph2==2.2.1
+      - nuitka==2.2.3
+      - numpy==1.26.4
+      - objectgraph==1.0.3
+      - ordered-set==4.1.0
+      - packaging==24.0
+      - pillow==10.3.0
+      - py2app==2.0a0
+      - pydantic==2.7.1
+      - pydantic-core==2.18.2
       - pygments==2.18.0
       - pyobjc-core==10.2
+      - pyobjc-framework-applicationservices==10.2
       - pyobjc-framework-cocoa==10.2
       - pyobjc-framework-corebluetooth==10.2
+      - pyobjc-framework-coretext==10.2
       - pyobjc-framework-libdispatch==10.2
+      - pyobjc-framework-quartz==10.2
       - rich==13.7.1
+      - rumps==5.14.50
       - semver==3.0.2
       - shellingham==1.5.4
       - structlog==24.1.0
       - typer==0.12.3
       - typing-extensions==4.11.0
+      - zstandard==0.22.0
 prefix: /Volumes/Devo/Users/jago/miniforge3/envs/termo
