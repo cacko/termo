@@ -19,7 +19,7 @@ uuid_write = "00010203-0405-0607-0809-0a0b0c0d2b11"
 uuid_read  = "00010203-0405-0607-0809-0a0b0c0d2b10"
 
 @cli.command()
-def room():
+def scan():
     pass
     
 def to_result(data: bytearray):
@@ -33,7 +33,7 @@ def notification_handler(sender: BleakGATTCharacteristic, data: bytearray):
 
     
 @cli.command()
-def open():
+def room():
     async def main():
         device: BLEDevice = None
         while not device:
