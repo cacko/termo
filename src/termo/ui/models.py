@@ -47,10 +47,24 @@ class Command(StrEnum):
 class NowData(BaseModel):
     temp: float
     humid: float
+    _idx: int
+    
+    def __init__(self, *args, **kwds):
+        super().__init__(*args, **kwds)
+        self._idx = 0
 
     @property
     def temp_text(self) -> str:
         return f"{self.temp}℃"
+
+    @property
+    def humid_text(self) -> str:
+        return f"{self.humid}%"
+    
+    
+    @property
+    def title(self) -> str:
+        return "・".join([self.temp_text, self.humid_text])
 
     @property
     def temp_icon(self) -> Symbol:
@@ -62,3 +76,28 @@ class NowData(BaseModel):
                 return Symbol.THERMOMETER_MEDIUM
             case _:
                 return Symbol.THERMOMETER_LOW
+
+    @property
+    def humid_icon(self) -> Symbol:
+        humid = self.humid
+        match humid:
+            case humid if humid > 80:
+                return Symbol.HUMIDITY_FILL
+            case _:
+                return Symbol.HUMIDITY
+
+    def __eq__(self, value: "NowData") -> bool:
+        return all([self.temp == value.temp, self.humid == value.humid])
+
+    def __iter__(self):
+        self._idx = 0
+        return self
+
+    def __next__(self):
+        if self._idx == 0:
+            res = (self.temp_text, self.temp_icon.value)
+            self._idx = 1
+        else:
+            res = (self.humid_text, self.humid_icon.value)
+            self._idx = 0
+        return res

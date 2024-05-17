@@ -4,6 +4,8 @@ version: "3"
 
 vars:
   PROJECT: termo
+  ENTRY: src/teRMo.py
+  APP: teRMo
 
 tasks:
   default:
@@ -19,85 +21,19 @@ tasks:
       - gcom || true
       - git push || true
 
-  pull:
-    desc: pulls from git
-    cmds:
-      - ssh $REMOTE_HOST 'source ~/.zshrc;cd /var/www/{{.PROJECT}};git reset --hard;git pull'
-
-  pp:
-    desc: push and pull
-    cmds:
-      - task: push
-      - task: pull
-
-  logs:
-    desc: monitor logs
-    cmds:
-      - ssh $REMOTE_HOST 'source ~/.zshrc;journalctl --user-unit {{.PROJECT}} -f --all'
-
-  exec:
-    desc: run  cli on remote
-    cmds:
-      - ssh $REMOTE_HOST 'source ~/.zshrc;cd /var/www/{{.PROJECT}};mamba run --live-stream -n {{.PROJECT}} python -m {{.PROJECT}}.cli {{.CLI_ARGS}}'
-
-  start:
-    desc: start the service
-    dir: src/
-    cmds:
-      - mamba run --live-stream -n {{.PROJECT}} python -m {{.PROJECT}}.app {{.CLI_ARGS}}
-
-  stop:
-    desc: stop the server
-    cmds:
-      - ssh $REMOTE_HOST 'source ~/.zshrc;systemctl --user stop {{.PROJECT}}'
-
-  restart:
-    desc: restart the service
-    cmds:
-      - task: stop
-      - ssh $REMOTE_HOST 'source ~/.zshrc;sleep 1'
-      - task: start
-
-  systemd-exec:
-    desc: systemd exec
-    dir: src/
-    cmds:
-      - direnv exec . mamba run --live-stream -n {{.PROJECT}} python -m {{.PROJECT}}.cli serve-api
-
   export:
     desc: export env
     cmds:
       - mamba env export --no-builds -n {{.PROJECT}} > environment.yml
 
-  export-remote:
-    desc: export env
+  build:
+    desc: build app
     cmds:
-      - ssh $REMOTE_HOST 'source ~/.zshrc;cd /var/www/{{.PROJECT}};mamba env export --no-builds -n {{.PROJECT}} > environment-remote.yml'
-      - ssh $REMOTE_HOST 'source ~/.zshrc;cd /var/www/{{.PROJECT}};task push'
-      - git pull
+      - mamba run --live-stream -n {{.PROJECT}} python -m nuitka {{.ENTRY}}
 
   install:
-    desc: update package
+    desc: install app
     cmds:
-      - ssh $REMOTE_HOST 'source ~/.zshrc;cd /var/www/{{.PROJECT}};mamba run --live-stream -n {{.PROJECT}} pip install {{.CLI_ARGS}} -U'
-      - task: export-remote
-      - task: deploy
-
-  deploy:
-    desc: shortcut for stop -> push -> pull -> restart
-    cmds:
-      - task: stop
-      - task: push
-      - task: pull
-      - task: restart
-
-  build:
-    desc: build
-    cmds:
-      - rm -rf dist/*
-      - mamba run --live-stream -n {{.PROJECT}} python  -m build
-
-  publish:
-    desc: publish
-    cmds:
-      - scp dist/* muzak:/var/www/pypi/packages/{{.PROJECT}}
+      - killall {{.APP}} || true
+      - rm -rf /Applications/{{.APP}}.app
+      - mv {{.APP}}.app /Applications

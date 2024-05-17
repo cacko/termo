@@ -15,6 +15,9 @@ class Symbol(Enum):
     HOURGLASS = "hourglass"
     HOURGLASS_BOTTOM = "hourglass.bottomhalf.filled"
     HOURGLASS_TOP = "hourglass.tophalf.filled"
+    HUMIDITY = "humidity"
+    HUMIDITY_FILL = "humidity.fill"
+    
 
 class Icon(Enum):
     def __new__(cls, *args):
