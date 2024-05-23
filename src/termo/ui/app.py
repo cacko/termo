@@ -3,7 +3,7 @@ from queue import Empty, Queue
 from threading import Thread
 from typing import Optional, Any
 from rumps import rumps
-from termo.ble.tp357 import TP357
+from termo.ble.service import Service
 from termo.ui.icons import AnimatedIcon, Label, Symbol
 from termo.ui.items.actions import ActionItem
 from termo.ui.models import NowData, Status, StatusChange
@@ -45,8 +45,8 @@ class TermoApp(rumps.App, metaclass=TermoAppMeta):
         self.__status = Status.LOADING
         self.__ui_queue = Queue()
         self.menu.setAutoenablesItems = False  # type: ignore
-        TP357.register(self.__ui_queue)
-        self.__threads.append(TP357.start_notify())
+        Service.register(self.__ui_queue)
+        self.__threads.append(Service.start_service())
 
     @property
     def threads(self):
@@ -79,20 +79,14 @@ class TermoApp(rumps.App, metaclass=TermoAppMeta):
                 self.__ui_queue.task_done()
         except Empty:
             pass
-        
+
     def _onStatusChange(self, resp: StatusChange):
         self.__status = resp.status
         match self.__status:
             case Status.DISCONNECTED:
                 self.icon = Symbol.DISCONNECTED.value
-                self.title = "N/A"
-                self.__now_data = None
-                TP357.stop_notify()
-                TP357.restart_notify()
             case _:
                 pass
-
-                
 
     def _onNowData(self, resp: NowData):
         try:
@@ -103,12 +97,9 @@ class TermoApp(rumps.App, metaclass=TermoAppMeta):
             self.__now_data = resp
             self.title = self.__now_data.title
             self.icon = self.__now_data.temp_icon.value
-            
-    
 
     @rumps.events.before_quit
     def terminate(self):
-        TP357.stop_notify()
         for th in self.__threads:
             try:
                 th.stop()  # type: ignore

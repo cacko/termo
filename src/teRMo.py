@@ -7,7 +7,8 @@
 # nuitka-project: --file-description=teRMo
 # nuitka-project: --include-data-files={MAIN_DIRECTORY}/icon.png=data/icon.png
 # nuitka-project: --macos-app-icon={MAIN_DIRECTORY}/icon.png
-# nuitka-project: --macos-app-protected-resource="NSBluetoothAlwaysUsageDescription:b luetooth access"
+# nuitka-project: --macos-app-protected-resource="NSLocalNetworkUsageDescription:b luetooth access"
+# nuitka-project: --include-package=websockets
 
 from termo import start
 from termo.core import check_pid, pid_file, show_alert

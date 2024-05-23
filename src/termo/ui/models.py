@@ -7,6 +7,7 @@ class Status(StrEnum):
     LOADING = "loading"
     DISCONNECTED = "disconnected"
     LOADED = "loaded"
+    CONNECTED = "connected"
 
 
 class Command(StrEnum):
