@@ -9,6 +9,9 @@
 # nuitka-project: --macos-app-icon={MAIN_DIRECTORY}/icon.png
 # nuitka-project: --macos-app-protected-resource="NSLocalNetworkUsageDescription:b luetooth access"
 # nuitka-project: --include-package=websockets
+# nuitka-project: --file-version="1.0.1"
+# nuitka-project: --product-version="1.0.1"
+# nuitka-project: --macos-app-version="1.0.1"
 
 from termo import start
 from termo.core import check_pid, pid_file, show_alert
@@ -20,4 +23,4 @@ if __name__ == "__main__":
         exit(1)
     else:
         pid_file.write_text(f"{os.getpid()}")
-        start()
+        start() 

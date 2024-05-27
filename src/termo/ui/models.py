@@ -44,6 +44,9 @@ class Command(StrEnum):
     PLAYER_RESPONSE = "player_response"
     SHARE = "share"
 
+class SensorLocation(StrEnum):
+    INDOOR = "indoor"
+    OUTDOOR = "outdoor"
 
 class StatusChange(BaseModel):
     status: Status
@@ -51,6 +54,7 @@ class StatusChange(BaseModel):
 class NowData(BaseModel):
     temp: float
     humid: float
+    location: SensorLocation
     _idx: int
     
     def __init__(self, *args, **kwds):
