@@ -3,6 +3,7 @@ from pathlib import Path
 
 
 class Label(Enum):
+    OUTDOOR = "Outdoor"
     QUIT = "Quit"
 
 

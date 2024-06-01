@@ -63,11 +63,11 @@ class NowData(BaseModel):
 
     @property
     def temp_text(self) -> str:
-        return f"{self.temp}℃"
+        return f"{self.temp:.01f}℃"
 
     @property
     def humid_text(self) -> str:
-        return f"{self.humid}%"
+        return f"{self.humid:.01f}%"
     
     
     @property

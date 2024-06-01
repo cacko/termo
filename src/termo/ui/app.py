@@ -6,7 +6,8 @@ from rumps import rumps
 from termo.ble.service import Service
 from termo.ui.icons import AnimatedIcon, Label, Symbol
 from termo.ui.items.actions import ActionItem
-from termo.ui.models import NowData, Status, StatusChange
+from termo.ui.items.info import OutdoorItem
+from termo.ui.models import NowData, SensorLocation, Status, StatusChange
 from termo.core import pid_file
 
 LoadingIcon = AnimatedIcon(
@@ -30,11 +31,13 @@ class TermoApp(rumps.App, metaclass=TermoAppMeta):
 
     __threads: list[Thread] = []
     __now_data: Optional[NowData] = None
+    __outdoor_data: Optional[NowData] = None
 
     def __init__(self):
         super(TermoApp, self).__init__(
             name="teRMo",
             menu=[
+                OutdoorItem(),
                 ActionItem.quit,
             ],
             icon=Symbol.DISCONNECTED.value,
@@ -42,6 +45,7 @@ class TermoApp(rumps.App, metaclass=TermoAppMeta):
             template=True,
             nosleep=False,
         )
+        OutdoorItem().setAvailability(True)
         self.__status = Status.LOADING
         self.__ui_queue = Queue()
         self.menu.setAutoenablesItems = False  # type: ignore
@@ -64,7 +68,7 @@ class TermoApp(rumps.App, metaclass=TermoAppMeta):
     @rumps.events.on_screen_wake
     def wake(self):
         pass
-
+    
     @rumps.timer(0.1)
     def process_ui_queue(self, sender):
         try:
@@ -90,6 +94,9 @@ class TermoApp(rumps.App, metaclass=TermoAppMeta):
 
     def _onNowData(self, resp: NowData):
         try:
+            if resp.location == SensorLocation.OUTDOOR:
+                OutdoorItem().update_data(resp)
+                return
             self.__status = Status.LOADED
             assert self.__now_data
             assert self.__now_data == resp
